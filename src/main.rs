@@ -1,5 +1,9 @@
 use clap::{arg, command, Parser};
-use liquid::*;
+use liquid::model::Value;
+use serde::Deserialize;
+use serde_json::from_reader;
+use std::fs::File;
+use std::io::BufReader;
 use std::{collections::HashMap, path::PathBuf};
 
 fn main() {
@@ -26,9 +30,23 @@ fn main() {
         }
     };
 
-    let obj = liquid::object!({
-        "name": "hogetaro",
-    });
+    println!("{:?}", args.try_parse_parameter_file().unwrap());
+
+    // let obj = liquid::object!(args.try_parse_parameter_file().unwrap().map);
+    let mut obj = liquid::Object::new();
+    for (k, v) in args.try_parse_parameter_file().unwrap().map {
+        obj.insert(
+            k.into(),
+            match v {
+                serde_json::Value::Number(n) => Value::scalar(n.as_i64().unwrap()),
+                serde_json::Value::String(s) => Value::scalar(s),
+                serde_json::Value::Bool(b) => Value::Scalar(b.into()),
+                _ => Value::Nil,
+            },
+        );
+    }
+
+    println!("{:?}", obj);
 
     let rendered = template.render(&obj).unwrap();
 
@@ -86,6 +104,22 @@ impl Args {
     pub fn get_output_file_path(&self) -> PathBuf {
         PathBuf::from(self.output.clone().unwrap())
     }
+
+    pub fn try_parse_parameter_file(&self) -> Result<Parameters, String> {
+        let file = match File::open(self.get_parameter_file_path()) {
+            Ok(f) => f,
+            Err(e) => {
+                return Err(format!("{}", e));
+            }
+        };
+
+        let reader: BufReader<File> = BufReader::new(file);
+
+        match from_reader::<BufReader<File>, Parameters>(reader) {
+            Ok(p) => Ok(p),
+            Err(e) => Err(format!("{}", e)),
+        }
+    }
 }
 
 struct Parameter {
@@ -93,8 +127,10 @@ struct Parameter {
     value: String,
 }
 
+#[derive(Deserialize, Debug)]
 struct Parameters {
-    map: HashMap<String, String>,
+    #[serde(flatten)]
+    map: HashMap<String, serde_json::Value>,
 }
 
 impl Parameters {
@@ -125,7 +161,7 @@ impl Parameters {
 
         for p in params.iter() {
             let (k, v) = Parameters::split_key_value(p);
-            map.insert(k, v);
+            map.insert(k, serde_json::Value::String(v));
         }
 
         Self { map }
