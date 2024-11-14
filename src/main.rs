@@ -7,16 +7,12 @@ use std::io::BufReader;
 use std::{collections::HashMap, path::PathBuf};
 
 fn main() {
-    println!("Hello, world!");
-
     let args = Args::parse();
 
     if !args.is_template_passed() {
         eprintln!("template file is not passed");
         return;
     }
-
-    println!("load {}", args.get_template_file_path().display());
 
     let template = match liquid::ParserBuilder::with_stdlib()
         .build()
@@ -30,11 +26,8 @@ fn main() {
         }
     };
 
-    println!("{:?}", args.try_parse_parameter_file().unwrap());
-
-    // let obj = liquid::object!(args.try_parse_parameter_file().unwrap().map);
     let mut obj = liquid::Object::new();
-    for (k, v) in args.try_parse_parameter_file().unwrap().map {
+    for (k, v) in args.get_parameters().map {
         obj.insert(
             k.into(),
             match v {
@@ -45,8 +38,6 @@ fn main() {
             },
         );
     }
-
-    println!("{:?}", obj);
 
     let rendered = template.render(&obj).unwrap();
 
@@ -65,25 +56,21 @@ struct Args {
     #[arg(short, long, help = "output file (*.json)")]
     output: Option<String>,
 
-    #[arg()]
-    templ: Option<String>,
-
     #[arg(help = "parameters (key=value ...)")]
     params: Vec<String>,
 }
 
 impl Args {
     pub fn is_template_passed(&self) -> bool {
-        (self.template.is_some() && self.template.as_ref().unwrap() != "")
-            || (self.templ.is_some() && self.templ.as_ref().unwrap() != "")
+        self.template.is_some() && self.template.as_ref().unwrap().len() > 0
     }
 
     pub fn is_parameter_passed(&self) -> bool {
-        self.parameter.is_some() && self.parameter.as_ref().unwrap() != ""
+        self.parameter.is_some() && self.parameter.as_ref().unwrap().len() > 0
     }
 
     pub fn is_output_passed(&self) -> bool {
-        self.output.is_some() && self.output.as_ref().unwrap() != ""
+        self.output.is_some() && self.output.as_ref().unwrap().len() > 0
     }
 
     pub fn is_parameters_passed(&self) -> bool {
@@ -91,10 +78,7 @@ impl Args {
     }
 
     pub fn get_template_file_path(&self) -> PathBuf {
-        match self.templ {
-            Some(ref templ) => PathBuf::from(templ.clone()),
-            None => PathBuf::from(self.template.clone().unwrap()),
-        }
+        PathBuf::from(self.template.clone().unwrap())
     }
 
     pub fn get_parameter_file_path(&self) -> PathBuf {
@@ -105,7 +89,7 @@ impl Args {
         PathBuf::from(self.output.clone().unwrap())
     }
 
-    pub fn try_parse_parameter_file(&self) -> Result<Parameters, String> {
+    fn try_parse_parameter_file(&self) -> Result<Parameters, String> {
         let file = match File::open(self.get_parameter_file_path()) {
             Ok(f) => f,
             Err(e) => {
@@ -118,25 +102,6 @@ impl Args {
         match from_reader::<BufReader<File>, Parameters>(reader) {
             Ok(p) => Ok(p),
             Err(e) => Err(format!("{}", e)),
-        }
-    }
-}
-
-struct Parameter {
-    key: String,
-    value: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct Parameters {
-    #[serde(flatten)]
-    map: HashMap<String, serde_json::Value>,
-}
-
-impl Parameters {
-    pub fn new() -> Self {
-        Self {
-            map: HashMap::new(),
         }
     }
 
@@ -156,14 +121,50 @@ impl Parameters {
         return (split[0].clone(), split[1].clone());
     }
 
-    pub fn new_from_key_value_params(params: Vec<String>) -> Self {
+    fn make_parameters_from_params(&self) -> Parameters {
         let mut map = HashMap::new();
 
-        for p in params.iter() {
-            let (k, v) = Parameters::split_key_value(p);
+        for p in self.params.iter() {
+            let (k, v) = Args::split_key_value(p);
             map.insert(k, serde_json::Value::String(v));
         }
 
+        Parameters::new_with_map(map)
+    }
+
+    pub fn get_parameters(&self) -> Parameters {
+        if self.is_parameter_passed() && self.is_parameters_passed() {
+            let mut params = self.try_parse_parameter_file().unwrap();
+            params.map.extend(self.make_parameters_from_params().map);
+            return params;
+        }
+
+        if self.is_parameters_passed() {
+            return self.make_parameters_from_params();
+        }
+
+        if self.is_parameter_passed() {
+            return self.try_parse_parameter_file().unwrap();
+        }
+
+        Parameters::new()
+    }
+}
+
+#[derive(Deserialize, Debug)]
+struct Parameters {
+    #[serde(flatten)]
+    map: HashMap<String, serde_json::Value>,
+}
+
+impl Parameters {
+    pub fn new() -> Self {
+        Self {
+            map: HashMap::new(),
+        }
+    }
+
+    pub fn new_with_map(map: HashMap<String, serde_json::Value>) -> Self {
         Self { map }
     }
 }
