@@ -6,6 +6,8 @@ use std::fs::File;
 use std::io::BufReader;
 use std::{collections::HashMap, path::PathBuf};
 
+mod include_tag;
+
 fn main() {
     let args = Args::parse();
 
@@ -166,5 +168,36 @@ impl Parameters {
 
     pub fn new_with_map(map: HashMap<String, serde_json::Value>) -> Self {
         Self { map }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_split_key_value() {
+        let (k, v) = Args::split_key_value("key=value");
+        assert_eq!(k, "key");
+        assert_eq!(v, "value");
+
+        let (k, v) = Args::split_key_value("key=value=1");
+        assert_eq!(k, "key");
+        assert_eq!(v, "value=1");
+    }
+
+    #[test]
+    fn test_include_tag() {
+        let template = liquid::ParserBuilder::with_stdlib()
+            .tag(include_tag::IncludeTag)
+            .build()
+            .unwrap()
+            .parse(r#"{% include "./src/main.rs" %}"#)
+            .unwrap();
+
+        let mut obj = liquid::Object::new();
+        let rendered = template.render(&obj).unwrap();
+
+        assert_eq!(rendered.to_string(), "Hello, world!");
     }
 }
