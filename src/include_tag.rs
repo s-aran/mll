@@ -112,9 +112,8 @@ impl Renderable for Include {
             //     .get(&name)
             //     .trace_with(|| format!("{{% include {} %}}", self.partial).into())?;
 
-            println!("{}", name);
             let buf = std::fs::read_to_string(name).unwrap();
-            writer.write(buf.as_bytes());
+            let _ = writer.write(buf.as_bytes());
 
             // partial
             //     .render_to(writer, &scope)
