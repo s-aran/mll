@@ -1,5 +1,5 @@
 [package]
-name = "liblqjson"
+name = "libmll"
 version = "0.1.0"
 edition = "2021"
 
@@ -17,3 +17,7 @@ mlua = { version = "0.10", features = [
     "serialize",
     "anyhow",
 ] }
+
+[dependencies.uuid]
+version = "1"
+features = ["v4", "fast-rng", "macro-diagnostics"]
