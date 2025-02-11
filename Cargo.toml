@@ -3,6 +3,11 @@ name = "libmll"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default=[]
+http=["chitose"]
+
+
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 serde = { version = "1.0", features = ["derive", "rc", "serde_derive"] }
@@ -17,7 +22,12 @@ mlua = { version = "0.10", features = [
     "serialize",
     "anyhow",
 ] }
+chitose = {version = "0.1", path= "../chitose", optional=true}
 
 [dependencies.uuid]
 version = "1"
 features = ["v4", "fast-rng", "macro-diagnostics"]
+
+
+
+

@@ -5,6 +5,9 @@ use std::fs::read_to_string;
 use std::path::Path;
 use uuid::Uuid;
 
+#[cfg(feature = "http")]
+use chitose::*;
+
 pub trait GetValueByName<T> {
     fn get_by_name(&self, name: &str) -> Option<T>;
 }
