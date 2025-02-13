@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default=[]
-http=["chitose"]
+default = []
+http = ["dep:chitose"]
 
 
 [dependencies]
@@ -22,12 +22,8 @@ mlua = { version = "0.10", features = [
     "serialize",
     "anyhow",
 ] }
-chitose = {version = "0.1", path= "../chitose", optional=true}
+chitose = { version = "0.1", path = "../chitose", optional = true }
 
 [dependencies.uuid]
 version = "1"
 features = ["v4", "fast-rng", "macro-diagnostics"]
-
-
-
-

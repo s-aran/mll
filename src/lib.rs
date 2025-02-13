@@ -1,3 +1,6 @@
+mod builtin;
+
+use clap::builder;
 use mlua::{FromLua, Lua, Table};
 use regex::Regex;
 use std::collections::HashMap;
@@ -36,6 +39,27 @@ where
     }
 }
 
+struct Internal {
+    lua: Lua,
+}
+
+impl Internal {
+    pub fn new() -> Self {
+        let mut lua = Lua::new();
+        builtin::init(&mut lua);
+
+        Self { lua }
+    }
+
+    pub fn load_script(&self, script: &str) -> Result<(), String> {
+        let result = self.lua.load(script).exec();
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e.to_string()),
+        }
+    }
+}
+
 pub struct Mll {
     template: String,
     tags: HashMap<String, String>,
@@ -62,16 +86,32 @@ impl Mll {
         self
     }
 
+    pub fn render_with_lua(&mut self, script: &str) -> Result<String, String> {
+        let internal = Internal::new();
+
+        let result = internal.load_script(script);
+        match result {
+            Ok(_) => {
+                let _ = internal.load_script(script);
+                let table = internal.lua.globals();
+                let rendered = self.render(&table);
+                rendered
+            }
+            Err(e) => Err(e),
+        }
+    }
+
     pub fn render<T>(&mut self, table: &T) -> Result<String, String>
     where
         T: GetValueByName<String>,
     {
         // define regex pattern for Mustache's variable-like syntax (e.g. {{ name }})
-        let re = Regex::new(r"\{\{\s*(\w+)\s*\}\}").unwrap();
+        let re_variable = Regex::new(r"\{\{\s*(\w+)\s*\}\}").unwrap();
+        let re_function = Regex::new(r#"\{\{\s*([\w\(\)"]+)\s*\}\}"#).unwrap();
 
-        let lua = Lua::new();
+        let internal = Internal::new();
 
-        let rendered = re
+        let rendered = re_variable
             .replace_all(&self.template.as_str(), |caps: &regex::Captures| {
                 // extract variable name (or Lua script) from template
                 let tag = caps.get(1).unwrap().as_str();
@@ -87,13 +127,49 @@ impl Mll {
                 self.tags.insert(variable_name.to_string(), tag.to_string());
 
                 // set Lua global table
-                let result = lua.load(format!("{variable_name} = {tag}")).exec();
+                let result = internal.lua.load(format!("{variable_name} = {tag}")).exec();
                 match result {
                     Ok(_) => match table.get_by_name(tag) {
                         Some(value) => value,
                         None => {
                             eprintln!("variable not found: {}", tag);
                             return "".to_string();
+                        }
+                    },
+                    Err(e) => {
+                        eprintln!("result: {}", e);
+                        return "".to_string();
+                    }
+                }
+            })
+            .into_owned();
+
+        let rendered = re_function
+            .replace_all(rendered.as_str(), |caps: &regex::Captures| {
+                let calling = caps.get(1).unwrap().as_str();
+
+                // make temporary variable name
+                let uuid = Uuid::new_v4();
+                let variable_name = format!(
+                    "f_{}",
+                    uuid.simple().encode_lower(&mut Uuid::encode_buffer())
+                );
+
+                // map variable name and temporary variable
+                self.tags
+                    .insert(variable_name.to_string(), calling.to_string());
+
+                // set Lua global table
+                let result = internal
+                    .lua
+                    .load(format!("{variable_name} = {calling}"))
+                    .exec();
+                match result {
+                    Ok(_) => match internal.lua.globals().get(variable_name) {
+                        Ok(value) => value,
+                        Err(e) => {
+                            eprintln!("{}", e);
+                            "".to_string()
                         }
                     },
                     Err(e) => {
@@ -115,6 +191,8 @@ impl Mll {
 #[cfg(test)]
 mod tests {
 
+    use mlua::{chunk, Value};
+
     use super::*;
 
     #[test]
@@ -132,6 +210,7 @@ mod tests {
         assert!(tags.contains(&"name".to_string()));
         assert_eq!(1, tags.len());
     }
+
     #[test]
     fn test_values_hashmap() {
         let template = "Hello, {{name}}!";
@@ -146,5 +225,20 @@ mod tests {
         let tags = mll.get_rendered_tags();
         assert!(tags.contains(&"name".to_string()));
         assert_eq!(1, tags.len());
+    }
+
+    #[test]
+    fn test() {
+        let script = "a = add_two(2)";
+
+        let mut lua = Lua::new();
+        let _ = builtin::init(&mut lua);
+
+        let _ = lua.load(script).exec();
+
+        assert_eq!(
+            4,
+            lua.globals().get::<Value>("a").unwrap().as_i32().unwrap()
+        );
     }
 }
