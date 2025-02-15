@@ -113,15 +113,26 @@ impl Mll {
         }
     }
 
+    pub fn render_lua_globals(&mut self) -> Result<String, String> {
+        let internal = Internal::new();
+        let _ = internal.load_script(&self.pre_process_script);
+
+        let table = internal.lua.globals();
+
+        self.render(&table)
+    }
+
     pub fn render<T>(&mut self, table: &T) -> Result<String, String>
     where
         T: GetValueByName<String>,
     {
         // define regex pattern for Mustache's variable-like syntax (e.g. {{ name }})
         let re_variable = Regex::new(r"\{\{\s*(\w+)\s*\}\}").unwrap();
-        let re_function = Regex::new(r#"\{\{\s*([\w\(\)"]+)\s*\}\}"#).unwrap();
+        // let re_function = Regex::new(r#"\{\{\s*([\w\(\)"]+)\s*\}\}"#).unwrap();
 
         let internal = Internal::new();
+
+        // internal.load_script(&self.pre_process_script);
 
         let rendered = re_variable
             .replace_all(&self.template.as_str(), |caps: &regex::Captures| {

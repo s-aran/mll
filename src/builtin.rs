@@ -28,7 +28,6 @@ pub fn init(lua: &mut Lua) -> mlua::Result<()> {
 
 #[cfg(test)]
 mod tests {
-
     use std::{collections::HashMap, hash::Hash};
 
     use super::*;
@@ -41,6 +40,8 @@ mod tests {
         let mut mll = Mll::new();
         mll.set_template(template.to_string());
         mll.set_pre_process_script(script.to_string());
+
+        assert_eq!("4 + 2 = 6", mll.render_lua_globals().unwrap());
     }
 
     // #[test]
