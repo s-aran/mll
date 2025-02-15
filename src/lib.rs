@@ -62,21 +62,33 @@ impl Internal {
 
 pub struct Mll {
     template: String,
+    pre_process_script: String,
     tags: HashMap<String, String>,
 }
 
 impl Mll {
-    pub fn new(template: String) -> Self {
+    pub fn new() -> Self {
         Self {
-            template,
+            template: String::new(),
             tags: HashMap::new(),
+            pre_process_script: String::new(),
         }
     }
 
-    pub fn set_template(&mut self, template: String) -> &Self {
-        self.template = template;
+    pub fn pre_process_script(&self) -> &String {
+        &self.pre_process_script
+    }
 
-        self
+    pub fn set_pre_process_script(&mut self, script: String) {
+        self.pre_process_script = script;
+    }
+
+    pub fn template(&self) -> &String {
+        &self.template
+    }
+
+    pub fn set_template(&mut self, template: String) {
+        self.template = template;
     }
 
     pub fn read_template_file(&mut self, path: &Path) -> &Self {
@@ -144,41 +156,41 @@ impl Mll {
             })
             .into_owned();
 
-        let rendered = re_function
-            .replace_all(rendered.as_str(), |caps: &regex::Captures| {
-                let calling = caps.get(1).unwrap().as_str();
+        // let rendered = re_function
+        //     .replace_all(rendered.as_str(), |caps: &regex::Captures| {
+        //         let calling = caps.get(1).unwrap().as_str();
 
-                // make temporary variable name
-                let uuid = Uuid::new_v4();
-                let variable_name = format!(
-                    "f_{}",
-                    uuid.simple().encode_lower(&mut Uuid::encode_buffer())
-                );
+        //         // make temporary variable name
+        //         let uuid = Uuid::new_v4();
+        //         let variable_name = format!(
+        //             "f_{}",
+        //             uuid.simple().encode_lower(&mut Uuid::encode_buffer())
+        //         );
 
-                // map variable name and temporary variable
-                self.tags
-                    .insert(variable_name.to_string(), calling.to_string());
+        //         // map variable name and temporary variable
+        //         self.tags
+        //             .insert(variable_name.to_string(), calling.to_string());
 
-                // set Lua global table
-                let result = internal
-                    .lua
-                    .load(format!("{variable_name} = {calling}"))
-                    .exec();
-                match result {
-                    Ok(_) => match internal.lua.globals().get(variable_name) {
-                        Ok(value) => value,
-                        Err(e) => {
-                            eprintln!("{}", e);
-                            "".to_string()
-                        }
-                    },
-                    Err(e) => {
-                        eprintln!("result: {}", e);
-                        return "".to_string();
-                    }
-                }
-            })
-            .into_owned();
+        //         // set Lua global table
+        //         let result = internal
+        //             .lua
+        //             .load(format!("{variable_name} = {calling}"))
+        //             .exec();
+        //         match result {
+        //             Ok(_) => match internal.lua.globals().get(variable_name) {
+        //                 Ok(value) => value,
+        //                 Err(e) => {
+        //                     eprintln!("{}", e);
+        //                     "".to_string()
+        //                 }
+        //             },
+        //             Err(e) => {
+        //                 eprintln!("result: {}", e);
+        //                 return "".to_string();
+        //             }
+        //         }
+        //     })
+        //     .into_owned();
 
         Ok(rendered)
     }
@@ -202,7 +214,8 @@ mod tests {
         let lua = Lua::new();
         lua.load("name = 'hoge'").exec().unwrap();
 
-        let mut mll = Mll::new(template.to_string());
+        let mut mll = Mll::new();
+        mll.set_template(template.to_string());
         let rendered = mll.render(&lua.globals());
         assert_eq!("Hello, hoge!", rendered.unwrap());
 
@@ -218,27 +231,13 @@ mod tests {
         let mut table = HashMap::new();
         table.insert("name", "hoge".to_string());
 
-        let mut mll = Mll::new(template.to_string());
+        let mut mll = Mll::new();
+        mll.set_template(template.to_string());
         let rendered = mll.render(&table);
         assert_eq!("Hello, hoge!", rendered.unwrap());
 
         let tags = mll.get_rendered_tags();
         assert!(tags.contains(&"name".to_string()));
         assert_eq!(1, tags.len());
-    }
-
-    #[test]
-    fn test() {
-        let script = "a = add_two(2)";
-
-        let mut lua = Lua::new();
-        let _ = builtin::init(&mut lua);
-
-        let _ = lua.load(script).exec();
-
-        assert_eq!(
-            4,
-            lua.globals().get::<Value>("a").unwrap().as_i32().unwrap()
-        );
     }
 }
