@@ -119,6 +119,12 @@ impl Mll {
 
         let table = internal.lua.globals();
 
+        // print
+        for pair in table.pairs::<String, mlua::Value>() {
+            let (key, value) = pair.unwrap();
+            println!("{}: {:?}", key, value);
+        }
+
         self.render(&table)
     }
 
