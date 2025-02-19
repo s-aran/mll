@@ -1,35 +1,66 @@
+use crate::Mll;
 use mlua::{Lua, Result, Table, Value};
 use serde_json::{Map, Value as JsonValue};
-
-use crate::Mll;
 use std::collections::HashMap;
 
-#[cfg(feature = "http")]
-use chitose::*;
+trait BuiltinFunction {
+    fn get_name(&self) -> &str;
+    fn get_function(&self, lua: &Lua) -> mlua::Function;
 
-pub fn init(lua: &mut Lua) -> mlua::Result<()> {
-    let lua_ref = lua.clone();
-    let globals = lua_ref.globals();
+    fn set_function(&self, lua: &Lua) -> mlua::Result<()> {
+        let globals = lua.globals();
+        let name = self.get_name();
+        let func = self.get_function(lua);
+        globals.set(name, func)?;
+        Ok(())
+    }
+}
 
-    let add_two = lua_ref.create_function(|_, value: i32| Ok(value + 2))?;
-    globals.set("add_two", add_two)?;
+struct AddTwo;
+
+impl BuiltinFunction for AddTwo {
+    fn get_name(&self) -> &str {
+        "add_two"
+    }
+
+    fn get_function(&self, lua: &Lua) -> mlua::Function {
+        let lua_ref = lua.clone();
+        lua_ref
+            .clone()
+            .create_function(move |_, value: i32| Ok(value + 2))
+            .unwrap()
+    }
+}
+
+struct SimpleHttpGet;
+
+impl BuiltinFunction for SimpleHttpGet {
+    fn get_name(&self) -> &str {
+        "simple_http_get"
+    }
+
+    fn get_function(&self, lua: &Lua) -> mlua::Function {
+        let lua_ref = lua.clone();
+        lua_ref
+            .clone()
+            .create_function(move |_, (url, data): (String, String)| {
+                let c = "";
+                let t = HashMap::<&str, &str>::new();
+
+                let r = chitose::sync_http_get(&url, &c, t, &data);
+                let r2 = json_str_to_lua_table(&lua_ref, &r);
+
+                Ok(r2.unwrap())
+            })
+            .unwrap()
+    }
+}
+
+pub fn init(lua: &Lua) -> mlua::Result<()> {
+    let _ = AddTwo {}.set_function(lua);
 
     #[cfg(feature = "http")]
-    {
-        let _simple_http_get =
-            lua_ref
-                .clone()
-                .create_function(move |_, (url, data): (String, String)| {
-                    let c = "";
-                    let t = HashMap::<&str, &str>::new();
-
-                    let r = chitose::sync_http_get(&url, &c, t, &data);
-                    let r2 = json_str_to_lua_table(&lua_ref, &r);
-
-                    Ok(r2.unwrap())
-                })?;
-        globals.set("simple_http_get", _simple_http_get)?;
-    }
+    let _ = SimpleHttpGet {}.set_function(lua);
 
     Ok(())
 }
