@@ -144,11 +144,11 @@ mod tests {
 
     #[test]
     fn test_simple_http_get() {
-        let template = "{{clen}}";
+        let template = "{{value}}";
         let pre_process_script = r#"
             response = simple_http_get("https://httpbin.org/get", '{"foo": "bar"}')
-            headers = response['headers']
-            clen = headers['Content-Length']
+            args = response['args']
+            value = args['foo']
         "#;
 
         let mut mll = Mll::new();
@@ -157,7 +157,7 @@ mod tests {
 
         // mll.get_variable("response").unwrap();
 
-        assert_eq!("14", mll.render_lua_globals().unwrap());
+        assert_eq!("bar", mll.render_lua_globals().unwrap());
     }
 
     // #[test]
@@ -195,7 +195,7 @@ mod tests {
         println!("{:?}", json);
 
         let lua = Lua::new();
-        let mut globals = lua.globals();
+        let globals = lua.globals();
 
         let v = json_to_lua(&lua, &json).unwrap();
         println!("{:?}", v);

@@ -46,7 +46,7 @@ struct Internal {
 impl Internal {
     pub fn new() -> Self {
         let mut lua = Lua::new();
-        builtin::init(&mut lua);
+        let _ = builtin::init(&mut lua);
 
         Self { lua }
     }
@@ -219,9 +219,6 @@ impl Mll {
 
 #[cfg(test)]
 mod tests {
-
-    use mlua::{chunk, Value};
-
     use super::*;
 
     #[test]
