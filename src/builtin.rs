@@ -1,8 +1,5 @@
-use crate::{
-    builtins::{add_two::AddTwo, builtin::BuiltinFunction, simple_http::SimpleHttpGet},
-    Mll,
-};
-use mlua::{Lua, Result};
+use crate::builtins::{add_two::AddTwo, builtin::BuiltinFunction, simple_http::SimpleHttpGet};
+use mlua::Lua;
 
 pub fn init(lua: &Lua) -> mlua::Result<()> {
     let _ = AddTwo {}.set_function(lua);
@@ -16,7 +13,7 @@ pub fn init(lua: &Lua) -> mlua::Result<()> {
 #[cfg(test)]
 mod tests {
 
-    use crate::utils::json_to_lua;
+    use crate::{utils::json_to_lua, Mll};
 
     use super::*;
 
