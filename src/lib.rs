@@ -122,10 +122,10 @@ impl Mll {
         let table = internal.lua.globals();
 
         // print
-        for pair in table.pairs::<String, mlua::Value>() {
-            let (key, value) = pair.unwrap();
-            println!("{}: {:?}", key, value);
-        }
+        // for pair in table.pairs::<String, mlua::Value>() {
+        //     let (key, value) = pair.unwrap();
+        //     println!("{}: {:?}", key, value);
+        // }
 
         self.render(&table)
     }
@@ -158,6 +158,11 @@ impl Mll {
                 self.tags.insert(variable_name.to_string(), tag.to_string());
 
                 // set Lua global table
+                // TODO: replace following script, too general purpose:
+                //  local function f_uuid()
+                //      return tag
+                //  end
+                //  v_uuid = f_uuid()
                 let result = internal.lua.load(format!("{variable_name} = {tag}")).exec();
                 match result {
                     Ok(_) => match table.get_by_name(tag) {

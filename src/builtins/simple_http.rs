@@ -8,6 +8,7 @@ use super::builtin::*;
 
 pub struct SimpleHttpGet;
 
+#[cfg(feature = "http")]
 impl BuiltinFunction for SimpleHttpGet {
     fn get_name(&self) -> &str {
         "simple_http_get"
