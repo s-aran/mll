@@ -2,16 +2,12 @@ mod builtin;
 mod builtins;
 mod utils;
 
-use clap::builder;
 use mlua::{FromLua, Lua, Table};
 use regex::Regex;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::read_to_string;
 use std::path::Path;
 use uuid::Uuid;
-
-#[cfg(feature = "http")]
-use chitose::*;
 
 pub trait GetValueByName<T> {
     fn get_by_name(&self, name: &str) -> Option<T>;
@@ -66,14 +62,16 @@ pub struct Mll {
     template: String,
     pre_process_script: String,
     tags: HashMap<String, String>,
+    processed_tags: HashSet<String>,
 }
 
 impl Mll {
     pub fn new() -> Self {
         Self {
             template: String::new(),
-            tags: HashMap::new(),
             pre_process_script: String::new(),
+            tags: HashMap::new(),
+            processed_tags: HashSet::new(),
         }
     }
 
@@ -142,6 +140,7 @@ impl Mll {
 
         // internal.load_script(&self.pre_process_script);
 
+        let mut succeeded = true;
         let rendered = re_variable
             .replace_all(&self.template.as_str(), |caps: &regex::Captures| {
                 // extract variable name (or Lua script) from template
@@ -166,13 +165,18 @@ impl Mll {
                 let result = internal.lua.load(format!("{variable_name} = {tag}")).exec();
                 match result {
                     Ok(_) => match table.get_by_name(tag) {
-                        Some(value) => value,
+                        Some(value) => {
+                            self.processed_tags.insert(tag.to_owned());
+                            value
+                        }
                         None => {
+                            succeeded = false;
                             eprintln!("variable not found: {}", tag);
                             return "".to_string();
                         }
                     },
                     Err(e) => {
+                        succeeded = false;
                         eprintln!("result: {}", e);
                         return "".to_string();
                     }
@@ -216,11 +220,27 @@ impl Mll {
         //     })
         //     .into_owned();
 
-        Ok(rendered)
+        if succeeded {
+            Ok(rendered)
+        } else {
+            Err(rendered)
+        }
     }
 
     pub fn get_rendered_tags(&self) -> Vec<String> {
         self.tags.values().cloned().collect()
+    }
+
+    pub fn get_missing_variables(&self) -> Vec<String> {
+        let mut missing_variables = Vec::new();
+
+        for tag in self.tags.values() {
+            if !self.processed_tags.contains(tag) {
+                missing_variables.push(tag.to_string());
+            }
+        }
+
+        missing_variables
     }
 }
 
@@ -260,5 +280,22 @@ mod tests {
         let tags = mll.get_rendered_tags();
         assert!(tags.contains(&"name".to_string()));
         assert_eq!(1, tags.len());
+    }
+
+    #[test]
+    fn test_get_missing_variables() {
+        let template = "{{hello}}, {{name}}!";
+
+        let mut table = HashMap::new();
+        table.insert("name", "hoge".to_string());
+
+        let mut mll = Mll::new();
+        mll.set_template(template.to_string());
+        let rendered = mll.render(&table);
+        assert!(rendered.is_err());
+
+        let missing_variables = mll.get_missing_variables();
+        assert_eq!(1, missing_variables.len());
+        assert_eq!("hello", missing_variables[0]);
     }
 }
