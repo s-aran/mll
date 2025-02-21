@@ -298,4 +298,29 @@ mod tests {
         assert_eq!(1, missing_variables.len());
         assert_eq!("hello", missing_variables[0]);
     }
+
+    #[test]
+    fn test_lua_os_datetime() {
+        let template = "{{days}}!";
+
+        let lua = Lua::new();
+        lua.load(
+            r#"
+            dt_tbl = os.date("*t")
+
+            days = dt_tbl.day
+        "#,
+        )
+        .exec()
+        .unwrap();
+
+        let mut mll = Mll::new();
+        mll.set_template(template.to_string());
+        let rendered = mll.render(&lua.globals());
+        assert_eq!("21!", rendered.unwrap());
+
+        let tags = mll.get_rendered_tags();
+        assert!(tags.contains(&"days".to_string()));
+        assert_eq!(1, tags.len());
+    }
 }
