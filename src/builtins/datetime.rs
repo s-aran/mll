@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::error::Error;
 
-use crate::Mll;
 use crate::utils::*;
+use crate::Mll;
 use chrono::offset::LocalResult;
 use chrono::prelude::*;
 use mlua::Lua;
@@ -11,6 +11,7 @@ use super::builtin::*;
 
 pub struct DateTimeFormatFunction;
 
+#[cfg(feature = "datetime")]
 impl BuiltinFunction for DateTimeFormatFunction {
     fn get_name(&self) -> &str {
         "datetime_format"
