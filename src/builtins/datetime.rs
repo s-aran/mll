@@ -11,6 +11,7 @@ use super::builtin::*;
 
 pub struct DateTimeFormatFunction;
 
+#[cfg(feature = "datetime")]
 impl BuiltinFunction for DateTimeFormatFunction {
     fn get_name(&self) -> &str {
         "datetime_format"

@@ -4,5 +4,4 @@ pub mod builtin;
 pub mod datetime;
 pub mod exec;
 #[cfg(feature = "http")]
-pub mod exec;
 pub mod simple_http;
