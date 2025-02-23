@@ -6,7 +6,12 @@ edition = "2024"
 [features]
 default = []
 http = ["dep:chitose"]
-html = ["dep:html5ever", "dep:markup5ever", "dep:markup5ever_rcdom", "dep:xml5ever"]
+html = [
+  "dep:html5ever",
+  "dep:markup5ever",
+  "dep:markup5ever_rcdom",
+  "dep:xml5ever",
+]
 datetime = ["dep:chrono"]
 
 
@@ -14,12 +19,18 @@ datetime = ["dep:chrono"]
 serde = { version = "1.0", features = ["derive", "rc", "serde_derive"] }
 serde_json = "1.0"
 regex = "1"
-mlua = { version = "0.10", features = ["lua54", "vendored", "macros", "serialize", "anyhow"] }
-chitose = { version = "0.1", git = "https://github.com/s-aran/chitose.git", branch="main", optional = true }
-html5ever = { git = "https://github.com/servo/html5ever.git", branch = "main" , optional=true}
-markup5ever = { git = "https://github.com/servo/html5ever.git", branch = "main" ,optional=true}
-markup5ever_rcdom = { git = "https://github.com/servo/html5ever.git", branch = "main" ,optional=true}
-xml5ever = { git = "https://github.com/servo/html5ever.git", branch = "main" ,optional=true}
+mlua = { version = "0.10", features = [
+  "lua54",
+  "vendored",
+  "macros",
+  "serialize",
+  "anyhow",
+] }
+chitose = { version = "0.1", git = "https://github.com/s-aran/chitose.git", branch = "main", optional = true }
+html5ever = { git = "https://github.com/servo/html5ever.git", branch = "main", optional = true }
+markup5ever = { git = "https://github.com/servo/html5ever.git", branch = "main", optional = true }
+markup5ever_rcdom = { git = "https://github.com/servo/html5ever.git", branch = "main", optional = true }
+xml5ever = { git = "https://github.com/servo/html5ever.git", branch = "main", optional = true }
 chrono = { version = "0.4", features = ["serde"], optional = true }
 
 
@@ -38,4 +49,3 @@ strip = true
 panic = 'abort'
 incremental = false
 overflow-checks = false
-
