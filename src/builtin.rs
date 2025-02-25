@@ -18,7 +18,7 @@ pub fn init(lua: &Lua) -> mlua::Result<()> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{Mll, utils::json_to_lua};
+    use crate::{utils::json_to_lua, Mll};
 
     use super::*;
 
