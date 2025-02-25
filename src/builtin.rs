@@ -1,11 +1,14 @@
-use crate::builtins::{add_two::AddTwo, builtin::BuiltinFunction, simple_http::SimpleHttpGet};
+use crate::builtins::{add_two::AddTwo, builtin::BuiltinFunction};
 use mlua::Lua;
 
 pub fn init(lua: &Lua) -> mlua::Result<()> {
     let _ = AddTwo {}.set_function(lua);
 
     #[cfg(feature = "http")]
-    let _ = SimpleHttpGet {}.set_function(lua);
+    {
+        use crate::builtins::simple_http::SimpleHttpGet;
+        let _ = SimpleHttpGet {}.set_function(lua);
+    }
 
     Ok(())
 }
@@ -13,7 +16,7 @@ pub fn init(lua: &Lua) -> mlua::Result<()> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{utils::json_to_lua, Mll};
+    use crate::{Mll, utils::json_to_lua};
 
     use super::*;
 
