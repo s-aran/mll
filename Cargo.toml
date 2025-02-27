@@ -13,6 +13,7 @@ html = [
   "dep:xml5ever",
 ]
 datetime = ["dep:chrono"]
+html = ["dep:html5ever", "dep:markup5ever", "dep:markup5ever_rcdom", "dep:xml5ever"]
 
 
 [dependencies]
@@ -49,3 +50,4 @@ strip = true
 panic = 'abort'
 incremental = false
 overflow-checks = false
+
