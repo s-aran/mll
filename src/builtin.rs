@@ -1,4 +1,6 @@
-use crate::builtins::{add_two::AddTwo, builtin::BuiltinFunction, exec::Exec};
+use crate::builtins::{
+    add_two::AddTwo, builtin::BuiltinFunction, exec::Exec, simple_http::SimpleHttpGet,
+};
 use mlua::Lua;
 
 pub fn init(lua: &Lua) -> mlua::Result<()> {
