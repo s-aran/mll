@@ -6,6 +6,7 @@ edition = "2024"
 [features]
 default = []
 http = ["dep:chitose"]
+html = ["dep:html5ever", "dep:markup5ever", "dep:markup5ever_rcdom", "dep:xml5ever"]
 
 
 [dependencies]
@@ -17,7 +18,24 @@ regex = "1"
 mustache = "0.9"
 mlua = { version = "0.10", features = ["lua54", "vendored", "macros", "serialize", "anyhow"] }
 chitose = { version = "0.1", git = "https://github.com/s-aran/chitose.git", branch="main", optional = true }
+html5ever = { git = "https://github.com/servo/html5ever.git", branch = "main" , optional=true}
+markup5ever = { git = "https://github.com/servo/html5ever.git", branch = "main" ,optional=true}
+markup5ever_rcdom = { git = "https://github.com/servo/html5ever.git", branch = "main" ,optional=true}
+xml5ever = { git = "https://github.com/servo/html5ever.git", branch = "main" ,optional=true}
 
 [dependencies.uuid]
 version = "1"
 features = ["v4", "fast-rng", "macro-diagnostics"]
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+strip = true
+panic = 'abort'
+incremental = false
+overflow-checks = false
+
