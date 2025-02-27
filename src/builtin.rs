@@ -1,8 +1,12 @@
-use crate::builtins::{add_two::AddTwo, builtin::BuiltinFunction, simple_http::SimpleHttpGet};
+use crate::builtins::{
+    add_two::AddTwo, builtin::BuiltinFunction, exec::Exec, simple_http::SimpleHttpGet,
+};
 use mlua::Lua;
 
 pub fn init(lua: &Lua) -> mlua::Result<()> {
     let _ = AddTwo {}.set_function(lua);
+
+    let _ = Exec {}.set_function(lua);
 
     #[cfg(feature = "http")]
     let _ = SimpleHttpGet {}.set_function(lua);
