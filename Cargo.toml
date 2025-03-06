@@ -13,12 +13,6 @@ html = [
   "dep:xml5ever",
 ]
 datetime = ["dep:chrono"]
-html = [
-  "dep:html5ever",
-  "dep:markup5ever",
-  "dep:markup5ever_rcdom",
-  "dep:xml5ever",
-]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive", "rc", "serde_derive"] }
