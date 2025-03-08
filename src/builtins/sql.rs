@@ -3,14 +3,21 @@ trait DatabaseSystemName {
     fn get_name(&self) -> &str;
 }
 
-pub enum Connection {
-    MySql(my_sql::MySqlConnectionConfig),
-    NoDb(no_db::NoDb),
+trait ConnectionStringBuilder {
+    fn build(&self) -> String;
 }
 
-impl Default for Connection {
-    fn default() -> Self {
-        Self::NoDb(no_db::NoDb::default())
+struct MySql {
+    host: String,
+    port: u32,
+    database: String,
+    username: String,
+    password: String,
+}
+
+impl ConnectionStringBuilder for MySql {
+    fn build(&self) -> String {
+        format!("mysql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}")
     }
 }
 
