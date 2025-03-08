@@ -12,6 +12,15 @@ pub fn init(lua: &Lua) -> mlua::Result<()> {
         let _ = SimpleHttpGet {}.set_function(lua);
     }
 
+    #[cfg(feature = "datetime")]
+    {
+        use crate::builtins::datetime::DateTimeFormat;
+        let _ = DateTimeFormat {}.set_function(lua);
+
+        use crate::builtins::datetime::DateTimeOffset;
+        let _ = DateTimeOffset {}.set_function(lua);
+    }
+
     Ok(())
 }
 

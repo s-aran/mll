@@ -1,17 +1,13 @@
-use std::collections::HashMap;
-use std::error::Error;
-
-use crate::utils::*;
-use crate::Mll;
-use chrono::offset::LocalResult;
+use chrono::Duration;
 use chrono::prelude::*;
 use mlua::Lua;
+use mlua::Table;
 
 use super::builtin::*;
 
-pub struct DateTimeFormatFunction;
+pub struct DateTimeFormat;
 
-impl BuiltinFunction for DateTimeFormatFunction {
+impl BuiltinFunction for DateTimeFormat {
     fn get_name(&self) -> &str {
         "datetime_format"
     }
@@ -20,15 +16,52 @@ impl BuiltinFunction for DateTimeFormatFunction {
         let lua_ref = lua.clone();
         lua_ref
             .clone()
-            .create_function(move |_, (url, data): (String, String)| {
-                let c = "";
-                let t = HashMap::<&str, &str>::new();
-
-                let r = chitose::sync_http_get(&url, &c, t, &data);
-                let r2 = json_str_to_lua_table(&lua_ref, &r);
-
-                Ok(r2.unwrap())
+            .create_function(move |_, (datetime, format): (Table, String)| {
+                let dt = lua_datetime_to_chrono(&datetime);
+                let formatted = dt.format(&format);
+                Ok(formatted.to_string())
             })
+            .unwrap()
+    }
+}
+
+pub struct DateTimeOffset;
+
+impl BuiltinFunction for DateTimeOffset {
+    fn get_name(&self) -> &str {
+        "datetime_offset"
+    }
+
+    fn get_function(&self, lua: &Lua) -> mlua::Function {
+        let lua_ref = lua.clone();
+        lua_ref
+            .clone()
+            .create_function(
+                move |_,
+                      (datetime, weeks, days, hours, minutes, seconds): (
+                    Table,
+                    Option<i64>,
+                    Option<i64>,
+                    Option<i64>,
+                    Option<i64>,
+                    Option<i64>,
+                )| {
+                    let weeks = Duration::weeks(weeks.unwrap_or(0));
+                    let days = Duration::days(days.unwrap_or(0));
+                    let hours = Duration::hours(hours.unwrap_or(0));
+                    let minutes = Duration::minutes(minutes.unwrap_or(0));
+                    let seconds = Duration::seconds(seconds.unwrap_or(0));
+
+                    let dt = lua_datetime_to_chrono(&datetime)
+                        + weeks
+                        + days
+                        + hours
+                        + minutes
+                        + seconds;
+
+                    Ok(chrono_datetime_to_lua(&lua_ref, &dt))
+                },
+            )
             .unwrap()
     }
 }
@@ -63,7 +96,13 @@ fn chrono_datetime_to_lua(lua: &mlua::Lua, data: &NaiveDateTime) -> mlua::Table 
     let date = chrono_date_to_lua(lua, &data.date());
     let time = chrono_time_to_lua(lua, &data.time());
 
-    table.set("year", date.get::<i32>("year").unwrap());
+    let _ = table.set("year", date.get::<i32>("year").unwrap_or(1970));
+    let _ = table.set("month", date.get::<i32>("month").unwrap_or(1));
+    let _ = table.set("day", date.get::<i32>("day").unwrap_or(1));
+
+    let _ = table.set("hour", time.get::<i32>("hour").unwrap_or(0));
+    let _ = table.set("min", time.get::<i32>("min").unwrap_or(0));
+    let _ = table.set("sec", time.get::<i32>("sec").unwrap_or(0));
 
     table
 }
@@ -90,33 +129,87 @@ fn chrono_time_to_lua(lua: &mlua::Lua, data: &NaiveTime) -> mlua::Table {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::Mll;
 
     #[test]
     fn test_datetime_format() {
-        let template = "";
-
-        let lua = Lua::new();
-        lua.load(r#"now = os.date("*t")"#).exec().unwrap();
-
-        // print
-        for pair in lua
-            .globals()
-            .get::<mlua::Table>("now")
-            .unwrap()
-            .pairs::<String, mlua::Value>()
-        {
-            let (key, value) = pair.unwrap();
-            println!("{}: {:?}", key, value);
-        }
-
+        let template = "{{formatted_datetime}}";
         let mut mll = Mll::new();
-        // mll.set_template(template.to_string());
-        let rendered = mll.render(&lua.globals());
-        assert_eq!("Hello, hoge!", rendered.unwrap());
+        mll.set_template(template.to_owned());
+        mll.set_pre_process_script(
+            r#"
+            local datetime = {
+                year = 2020,
+                month = 1,
+                day = 2,
+                hour = 12,
+                min = 34,
+                sec = 56
+            };
 
-        // let tags = mll.get_rendered_tags();
-        // assert!(tags.contains(&"name".to_string()));
-        // assert_eq!(1, tags.len());
+            formatted_datetime = datetime_format(datetime, "%Y年%m月%d日　%H時%M分%S秒");
+        "#
+            .to_string(),
+        );
+
+        let rendered = mll.render_lua_globals();
+        let expected = "2020年01月02日　12時34分56秒";
+        assert_eq!(expected, rendered.unwrap());
+    }
+
+    #[test]
+    fn test_datetime_offset() {
+        let template = "{{formatted_datetime}}";
+        let mut mll = Mll::new();
+        mll.set_template(template.to_owned());
+        mll.set_pre_process_script(
+            r#"
+            local datetime = {
+                year = 2020,
+                month = 1,
+                day = 2,
+                hour = 12,
+                min = 34,
+                sec = 56
+            };
+
+            datetime = datetime_offset(datetime, 1, -2, 3, -4, 5);
+
+            formatted_datetime = datetime_format(datetime, "%Y年%m月%d日　%H時%M分%S秒");
+        "#
+            .to_string(),
+        );
+
+        let rendered = mll.render_lua_globals();
+        let expected = "2020年01月07日　15時31分01秒";
+        assert_eq!(expected, rendered.unwrap());
+    }
+
+    #[test]
+    fn test_datetime_offset_nil() {
+        let template = "{{formatted_datetime}}";
+        let mut mll = Mll::new();
+        mll.set_template(template.to_owned());
+        mll.set_pre_process_script(
+            r#"
+            local datetime = {
+                year = 2020,
+                month = 1,
+                day = 2,
+                hour = 12,
+                min = 34,
+                sec = 56
+            };
+
+            datetime = datetime_offset(datetime, nil, nil, nil, nil, nil);
+
+            formatted_datetime = datetime_format(datetime, "%Y年%m月%d日　%H時%M分%S秒");
+        "#
+            .to_string(),
+        );
+
+        let rendered = mll.render_lua_globals();
+        let expected = "2020年01月02日　12時34分56秒";
+        assert_eq!(expected, rendered.unwrap());
     }
 }
