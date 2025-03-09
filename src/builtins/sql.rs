@@ -1,23 +1,17 @@
 use super::builtin::BuiltinFunction;
+
 trait DatabaseSystemName {
     fn get_name(&self) -> &str;
 }
 
-trait ConnectionStringBuilder {
-    fn build(&self) -> String;
+pub enum Connection {
+    MySql(my_sql::MySqlConnectionConfig),
+    NoDb(no_db::NoDb),
 }
 
-struct MySql {
-    host: String,
-    port: u32,
-    database: String,
-    username: String,
-    password: String,
-}
-
-impl ConnectionStringBuilder for MySql {
-    fn build(&self) -> String {
-        format!("mysql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}")
+impl Default for Connection {
+    fn default() -> Self {
+        Self::NoDb(no_db::NoDb::default())
     }
 }
 
