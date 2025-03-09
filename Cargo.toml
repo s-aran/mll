@@ -13,6 +13,7 @@ html = [
   "dep:xml5ever",
 ]
 datetime = ["dep:chrono"]
+sql = ["dep:sqlx"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive", "rc", "serde_derive"] }
@@ -31,6 +32,14 @@ markup5ever = { git = "https://github.com/servo/html5ever.git", branch = "main",
 markup5ever_rcdom = { git = "https://github.com/servo/html5ever.git", branch = "main", optional = true }
 xml5ever = { git = "https://github.com/servo/html5ever.git", branch = "main", optional = true }
 chrono = { version = "0.4", features = ["serde"], optional = true }
+sqlx = { version = "0.8", features = [
+  "chrono",
+  "json",
+  "macros",
+  "mysql",
+], optional = true }
+encoding_rs = { version = "0.8", features = ["fast-kanji-encode", "serde"] }
+tokio = { version = "1.44.0", features = ["bytes", "rt", "rt-multi-thread"] }
 
 
 [dependencies.uuid]
