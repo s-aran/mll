@@ -44,7 +44,7 @@ struct Internal {
 impl Internal {
     pub fn new() -> Self {
         let mut lua = Lua::new();
-        let _ = builtin::init(&mut lua);
+        let builtins = builtin::Builtins::init(&mut lua);
 
         Self { lua }
     }

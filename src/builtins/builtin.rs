@@ -6,7 +6,7 @@ pub trait BuiltinFunction {
 
     fn set_function(&self, lua: &Lua) -> mlua::Result<()> {
         let globals = lua.globals();
-        let name = self.get_name();
+        let name = self.get_name().to_owned();
         let func = self.get_function(lua);
         globals.set(name, func)?;
         Ok(())

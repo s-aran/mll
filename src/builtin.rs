@@ -1,27 +1,29 @@
-use crate::builtins::{add_two::AddTwo, builtin::BuiltinFunction, exec::Exec};
+use crate::builtins::{builtin::BuiltinFunction, exec::Exec};
 use mlua::Lua;
 
-pub fn init(lua: &Lua) -> mlua::Result<()> {
-    let _ = AddTwo {}.set_function(lua);
+pub struct Builtins;
 
-    let _ = Exec {}.set_function(lua);
+impl Builtins {
+    pub fn init(lua: &Lua) -> mlua::Result<()> {
+        let _ = Exec {}.set_function(lua);
 
-    #[cfg(feature = "http")]
-    {
-        use crate::builtins::simple_http::SimpleHttpGet;
-        let _ = SimpleHttpGet {}.set_function(lua);
+        #[cfg(feature = "http")]
+        {
+            use crate::builtins::simple_http::SimpleHttpGet;
+            let _ = SimpleHttpGet {}.set_function(lua);
+        }
+
+        #[cfg(feature = "datetime")]
+        {
+            use crate::builtins::datetime::DateTimeFormat;
+            let _ = DateTimeFormat {}.set_function(lua);
+
+            use crate::builtins::datetime::DateTimeOffset;
+            let _ = DateTimeOffset {}.set_function(lua);
+        }
+
+        Ok(())
     }
-
-    #[cfg(feature = "datetime")]
-    {
-        use crate::builtins::datetime::DateTimeFormat;
-        let _ = DateTimeFormat {}.set_function(lua);
-
-        use crate::builtins::datetime::DateTimeOffset;
-        let _ = DateTimeOffset {}.set_function(lua);
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]
