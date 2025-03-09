@@ -1,6 +1,9 @@
 use mlua::{Lua, Result, Table, Value};
 use serde_json::{Map, Value as JsonValue};
 
+use encoding_rs;
+use encoding_rs::SHIFT_JIS;
+
 pub fn json_str_to_lua_table(lua: &Lua, json_str: &str) -> Result<Table> {
     let json_value: JsonValue = serde_json::from_str(json_str)
         .map_err(|e| mlua::Error::RuntimeError(format!("JSON parse error: {}", e)))?;
@@ -95,4 +98,18 @@ fn is_array(table: &Table) -> Result<bool> {
         }
     }
     Ok(true)
+}
+
+pub fn lua_string_to_shift_jis(lua: &Lua, string: mlua::String) -> mlua::String {
+    let ls = string.to_str().unwrap();
+    let (s, _, _) = SHIFT_JIS.encode(&ls);
+    lua.create_string(&s).unwrap()
+}
+
+pub fn do_blocking<F>(future: F) -> F::Output
+where
+    F: Future,
+{
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    rt.block_on(future)
 }
