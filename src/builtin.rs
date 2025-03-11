@@ -2,41 +2,45 @@ use crate::builtins::{add_two::AddTwo, builtin::BuiltinFunction, exec::Exec, s::
 
 use mlua::Lua;
 
-pub fn init(lua: &Lua) -> mlua::Result<()> {
-    let _ = AddTwo {}.set_function(lua);
+pub struct Builtins;
 
-    let _ = Exec {}.set_function(lua);
-    let _ = ShiftJis {}.set_function(lua);
+impl Builtins {
+    pub fn init(lua: &Lua) -> mlua::Result<()> {
+        let _ = AddTwo {}.set_function(lua);
 
-    #[cfg(feature = "http")]
-    {
-        use crate::builtins::simple_http::{
-            SendHttpRequest, SimpleHttpDelete, SimpleHttpGet, SimpleHttpPost, SimpleHttpPut,
-        };
+        let _ = Exec {}.set_function(lua);
+        let _ = ShiftJis {}.set_function(lua);
 
-        let _ = SimpleHttpGet {}.set_function(lua);
-        let _ = SimpleHttpPost {}.set_function(lua);
-        let _ = SimpleHttpPut {}.set_function(lua);
-        let _ = SimpleHttpDelete {}.set_function(lua);
-        let _ = SendHttpRequest {}.set_function(lua);
-
-        #[cfg(feature = "datetime")]
+        #[cfg(feature = "http")]
         {
-            use crate::builtins::datetime::DateTimeFormat;
-            let _ = DateTimeFormat {}.set_function(lua);
+            use crate::builtins::simple_http::{
+                SendHttpRequest, SimpleHttpDelete, SimpleHttpGet, SimpleHttpPost, SimpleHttpPut,
+            };
 
-            use crate::builtins::datetime::DateTimeOffset;
-            let _ = DateTimeOffset {}.set_function(lua);
+            let _ = SimpleHttpGet {}.set_function(lua);
+            let _ = SimpleHttpPost {}.set_function(lua);
+            let _ = SimpleHttpPut {}.set_function(lua);
+            let _ = SimpleHttpDelete {}.set_function(lua);
+            let _ = SendHttpRequest {}.set_function(lua);
+
+            #[cfg(feature = "datetime")]
+            {
+                use crate::builtins::datetime::DateTimeFormat;
+                let _ = DateTimeFormat {}.set_function(lua);
+
+                use crate::builtins::datetime::DateTimeOffset;
+                let _ = DateTimeOffset {}.set_function(lua);
+            }
         }
-    }
 
-    Ok(())
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use crate::{utils::json_to_lua, Mll};
+    use crate::{Mll, utils::json_to_lua};
 
     use super::*;
 
