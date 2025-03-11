@@ -28,9 +28,9 @@ pub fn init(lua: &Lua) -> mlua::Result<()> {
             use crate::builtins::datetime::DateTimeOffset;
             let _ = DateTimeOffset {}.set_function(lua);
         }
-
-        Ok(())
     }
+
+    Ok(())
 }
 
 #[cfg(test)]
