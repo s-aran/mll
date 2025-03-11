@@ -1,33 +1,36 @@
-use crate::builtins::{add_two::AddTwo, builtin::BuiltinFunction, exec::Exec};
+use crate::builtins::{add_two::AddTwo, builtin::BuiltinFunction, exec::Exec, s::ShiftJis};
+
 use mlua::Lua;
 
 pub fn init(lua: &Lua) -> mlua::Result<()> {
     let _ = AddTwo {}.set_function(lua);
 
     let _ = Exec {}.set_function(lua);
+    let _ = ShiftJis {}.set_function(lua);
 
     #[cfg(feature = "http")]
     {
         use crate::builtins::simple_http::{
             SendHttpRequest, SimpleHttpDelete, SimpleHttpGet, SimpleHttpPost, SimpleHttpPut,
         };
+
         let _ = SimpleHttpGet {}.set_function(lua);
         let _ = SimpleHttpPost {}.set_function(lua);
         let _ = SimpleHttpPut {}.set_function(lua);
         let _ = SimpleHttpDelete {}.set_function(lua);
         let _ = SendHttpRequest {}.set_function(lua);
+
+        #[cfg(feature = "datetime")]
+        {
+            use crate::builtins::datetime::DateTimeFormat;
+            let _ = DateTimeFormat {}.set_function(lua);
+
+            use crate::builtins::datetime::DateTimeOffset;
+            let _ = DateTimeOffset {}.set_function(lua);
+        }
+
+        Ok(())
     }
-
-    #[cfg(feature = "datetime")]
-    {
-        use crate::builtins::datetime::DateTimeFormat;
-        let _ = DateTimeFormat {}.set_function(lua);
-
-        use crate::builtins::datetime::DateTimeOffset;
-        let _ = DateTimeOffset {}.set_function(lua);
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]
