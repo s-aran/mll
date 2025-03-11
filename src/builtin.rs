@@ -1,5 +1,9 @@
 use crate::builtins::{
-    builtin::BuiltinFunction, exec::Exec, random::RandomInt, random::RandomString, s::ShiftJis,
+    builtin::BuiltinFunction,
+    exec::Exec,
+    include::Include,
+    random::{RandomInt, RandomString},
+    s::ShiftJis,
 };
 
 use mlua::Lua;
@@ -15,6 +19,8 @@ impl Builtins {
 
         let _ = RandomInt {}.set_function(lua);
         let _ = RandomString {}.set_function(lua);
+
+        let _ = Include {}.set_function(lua);
 
         #[cfg(feature = "http")]
         {
