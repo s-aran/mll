@@ -1,4 +1,6 @@
-use crate::builtins::{add_two::AddTwo, builtin::BuiltinFunction, exec::Exec, s::ShiftJis};
+use crate::builtins::{
+    builtin::BuiltinFunction, exec::Exec, random::RandomInt, random::RandomString, s::ShiftJis,
+};
 
 use mlua::Lua;
 
@@ -6,10 +8,13 @@ pub struct Builtins;
 
 impl Builtins {
     pub fn init(lua: &Lua) -> mlua::Result<()> {
-        let _ = AddTwo {}.set_function(lua);
-
         let _ = Exec {}.set_function(lua);
         let _ = ShiftJis {}.set_function(lua);
+
+        let _ = ShiftJis {}.set_function(lua);
+
+        let _ = RandomInt {}.set_function(lua);
+        let _ = RandomString {}.set_function(lua);
 
         #[cfg(feature = "http")]
         {
@@ -45,18 +50,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_add_two_outer() {
-        let template = r#"4 + 2 = {{sum}}"#;
-        let script = r#"sum = add_two(4)"#;
-
-        let mut mll = Mll::new();
-        mll.set_template(template.to_string());
-        mll.set_pre_process_script(script.to_string());
-
-        assert_eq!("4 + 2 = 6", mll.render_lua_globals().unwrap());
-    }
-
-    #[test]
     fn test_simple_http_get() {
         let template = "{{value}}";
         let pre_process_script = r#"
@@ -73,28 +66,6 @@ mod tests {
 
         assert_eq!("bar", mll.render_lua_globals().unwrap());
     }
-
-    // #[test]
-    // fn test_add_two() {
-    //     let template = r#"4 + 2 = {{add_two(4)}}"#;
-    //     let table = HashMap::<&str, String>::new();
-
-    //     let mut mll = Mll::new(template.to_string());
-    //     let rendered = mll.render(&table);
-
-    //     assert_eq!("4 + 2 = 6", rendered.unwrap());
-    // }
-
-    // #[test]
-    // fn test_simple_http_get() {
-    //     let template = r#"Get ==> {{simple_http_get('https://httpbin.org/get', '{"foo":"bar"}')}}"#;
-    //     let table = HashMap::<&str, String>::new();
-
-    //     let mut mll = Mll::new(template.to_string());
-    //     let rendered = mll.render(&table);
-
-    //     assert_eq!("4 + 2 = 6", rendered.unwrap());
-    // }
 
     #[test]
     fn test_serde_value_pass_lua() {
