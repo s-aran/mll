@@ -8,8 +8,14 @@ pub fn init(lua: &Lua) -> mlua::Result<()> {
 
     #[cfg(feature = "http")]
     {
-        use crate::builtins::simple_http::SimpleHttpGet;
+        use crate::builtins::simple_http::{
+            SendHttpRequest, SimpleHttpDelete, SimpleHttpGet, SimpleHttpPost, SimpleHttpPut,
+        };
         let _ = SimpleHttpGet {}.set_function(lua);
+        let _ = SimpleHttpPost {}.set_function(lua);
+        let _ = SimpleHttpPut {}.set_function(lua);
+        let _ = SimpleHttpDelete {}.set_function(lua);
+        let _ = SendHttpRequest {}.set_function(lua);
     }
 
     #[cfg(feature = "datetime")]
@@ -27,7 +33,7 @@ pub fn init(lua: &Lua) -> mlua::Result<()> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{Mll, utils::json_to_lua};
+    use crate::{utils::json_to_lua, Mll};
 
     use super::*;
 

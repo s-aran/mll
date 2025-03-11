@@ -207,11 +207,11 @@ impl IntoLua for HttpRequest {
     }
 }
 
-pub struct SendHttp;
+pub struct SendHttpRequest;
 
-impl BuiltinFunction for SendHttp {
+impl BuiltinFunction for SendHttpRequest {
     fn get_name(&self) -> &str {
-        "send_http"
+        "send_http_request"
     }
 
     fn get_function(&self, lua: &Lua) -> mlua::Function {
