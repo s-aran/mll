@@ -3,6 +3,7 @@ use crate::builtins::{
     exec::Exec,
     include::Include,
     random::{RandomInt, RandomString},
+    render::Render,
     s::ShiftJis,
 };
 
@@ -21,6 +22,7 @@ impl Builtins {
         let _ = RandomString {}.set_function(lua);
 
         let _ = Include {}.set_function(lua);
+        let _ = Render {}.set_function(lua);
 
         #[cfg(feature = "http")]
         {

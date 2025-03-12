@@ -5,6 +5,7 @@ pub mod datetime;
 pub mod exec;
 pub mod include;
 pub mod random;
+pub mod render;
 pub mod s;
 #[cfg(feature = "http")]
 pub mod simple_http;
