@@ -33,15 +33,15 @@ impl Builtins {
             let _ = SimpleHttpPut {}.set_function(lua);
             let _ = SimpleHttpDelete {}.set_function(lua);
             let _ = SendHttpRequest {}.set_function(lua);
+        }
 
-            #[cfg(feature = "datetime")]
-            {
-                use crate::builtins::datetime::DateTimeFormat;
-                let _ = DateTimeFormat {}.set_function(lua);
+        #[cfg(feature = "datetime")]
+        {
+            use crate::builtins::datetime::DateTimeFormat;
+            let _ = DateTimeFormat {}.set_function(lua);
 
-                use crate::builtins::datetime::DateTimeOffset;
-                let _ = DateTimeOffset {}.set_function(lua);
-            }
+            use crate::builtins::datetime::DateTimeOffset;
+            let _ = DateTimeOffset {}.set_function(lua);
         }
 
         Ok(())
