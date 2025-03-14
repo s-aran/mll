@@ -104,7 +104,6 @@ impl Mll {
         let result = internal.load_script(script);
         match result {
             Ok(_) => {
-                let _ = internal.load_script(script);
                 let table = internal.lua.globals();
                 let rendered = self.render(&table);
                 rendered
