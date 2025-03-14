@@ -36,7 +36,7 @@ impl IntoLua for ExecResult {
 }
 
 impl FromLua for ExecResult {
-    fn from_lua(value: mlua::Value, lua: &Lua) -> mlua::Result<Self> {
+    fn from_lua(value: mlua::Value, _: &Lua) -> mlua::Result<Self> {
         let table = value.as_table().unwrap();
 
         Ok(ExecResult {

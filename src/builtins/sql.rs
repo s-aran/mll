@@ -1,7 +1,4 @@
-use mlua::{IntoLua, Lua, Table};
-
 use super::builtin::BuiltinFunction;
-
 trait DatabaseSystemName {
     fn get_name(&self) -> &str;
 }
@@ -15,10 +12,6 @@ impl Default for Connection {
     fn default() -> Self {
         Self::NoDb(no_db::NoDb::default())
     }
-}
-
-fn execute_sql() {
-    //
 }
 
 mod my_sql {
