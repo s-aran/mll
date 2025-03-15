@@ -1,10 +1,32 @@
-use chrono::Duration;
+/// DateTime command module
+///
+/// this module provides formatting and alithmetric operations for datetime table.
+///
 use chrono::prelude::*;
+use chrono::Duration;
 use mlua::Lua;
 use mlua::Table;
 
 use super::builtin::*;
 
+/// Format command
+///
+/// format datetime.
+///
+/// # Examples
+///
+/// ```lua
+/// local dt = os.date(*t)
+/// local formatted = datetime_format(dt)
+///
+/// year = formatted.year -- will be 2025
+/// month = formatted.month -- will be 3
+/// day = formatted.day -- will be 14
+/// hour = formatted.hour -- will be 22
+/// minute = formatted.minute -- will be 27
+/// second = formatted.second -- will be 37
+/// ```
+///
 pub struct DateTimeFormat;
 
 impl BuiltinFunction for DateTimeFormat {
