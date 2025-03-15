@@ -53,6 +53,7 @@ mod tests {
         assert_eq!(expected, render.unwrap());
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     #[should_panic(expected = "No such file or directory (os error 2)")]
     fn test_include_panic() {
