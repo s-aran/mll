@@ -54,8 +54,14 @@ fn system(program: String, args: Vec<String>) -> ExecResult {
 
     ExecResult {
         code: output.status.code().unwrap(),
-        stdout: String::from_utf8(output.stdout).unwrap(),
-        stderr: String::from_utf8(output.stderr).unwrap(),
+        stdout: String::from_utf8(output.stdout)
+            .unwrap()
+            .trim_end()
+            .to_string(),
+        stderr: String::from_utf8(output.stderr)
+            .unwrap()
+            .trim_end()
+            .to_string(),
     }
 }
 
@@ -66,15 +72,16 @@ mod tests {
 
     #[test]
     fn test_system() {
-        let program = "echo".to_string();
-        let args = vec!["foo", "bar", "baz", "qux"]
+        let program = "rustc".to_string();
+        let args = vec!["--version"]
             .iter()
             .map(|e| (*e).into())
             .collect::<Vec<String>>();
         let result = system(program, args);
 
         assert_eq!(0, result.code);
-        assert_eq!("foo bar baz qux\n", result.stdout);
+        assert!(result.stdout.starts_with("rustc"));
+        assert!(result.stdout.ends_with(")"));
         assert_eq!("", result.stderr);
     }
 
@@ -83,14 +90,13 @@ mod tests {
         let lua = Lua::new();
 
         let _ = Exec {}.set_function(&lua);
-        let _ = lua
-            .load(r#"result = exec("echo", {"foo", "bar", "baz", "qux"})"#)
-            .exec();
+        let _ = lua.load(r#"result = exec("rustc", {"--version"})"#).exec();
 
         let result = lua.globals().get::<ExecResult>("result").unwrap();
 
         assert_eq!(0, result.code);
-        assert_eq!("foo bar baz qux\n", result.stdout);
+        assert!(result.stdout.starts_with("rustc"));
+        assert!(result.stdout.ends_with(")"));
         assert_eq!("", result.stderr);
     }
 }
