@@ -15,7 +15,7 @@ impl Default for Connection {
     }
 }
 
-mod my_sql {
+pub mod my_sql {
     use mlua::{FromLua, IntoLua, Lua, Table};
     use sqlx::mysql::{
         MySqlColumn, MySqlConnectOptions, MySqlConnection, MySqlPool, MySqlRow, MySqlSslMode,
@@ -28,10 +28,7 @@ mod my_sql {
 
     use super::DatabaseSystemName;
 
-    pub struct ConnectMySql {
-        key: String,
-        connection: MySqlConnectionConfig,
-    }
+    pub struct ConnectMySql {}
 
     impl BuiltinFunction for ConnectMySql {
         fn get_name(&self) -> &str {
@@ -51,7 +48,7 @@ mod my_sql {
 
                     let table = lua.create_table()?;
                     table.set(key.clone(), config)?;
-                    lua.globals().set("qlp_internal", table)?;
+                    lua.globals().set("mll_internal", table)?;
 
                     Ok(key)
                 })
@@ -71,47 +68,10 @@ mod my_sql {
             lua_ref
                 .clone()
                 .create_function(move |lua, (connection_string, query): (String, String)| {
-                    let table: Table = lua.globals().get("qlp_internal")?;
-                    let connection_data: MySqlConnectionConfig = table.get(connection_string)?;
-
-                    let conn = do_blocking(
-                        MySqlConnectOptions::new()
-                            .host(connection_data.host.as_str())
-                            .port(connection_data.port)
-                            .username(connection_data.username.as_str())
-                            .password(connection_data.password.as_str())
-                            .database(connection_data.database.as_str())
-                            .connect(),
-                    );
-
-                    if conn.is_err() {
-                        return Err(mlua::Error::RuntimeError(
-                            "Failed to connect to database".to_string(),
-                        ));
-                    }
-
-                    let result =
-                        do_blocking(sqlx::query(query.as_str()).fetch_all(&mut conn.unwrap()));
-
-                    if result.is_err() {
-                        return Err(mlua::Error::RuntimeError(
-                            "Failed to execute query".to_string(),
-                        ));
-                    }
-
-                    let fetched = result.unwrap();
-                    let table = lua.create_table()?;
-
-                    for row in fetched {
-                        let row_table = lua.create_table()?;
-
-                        for column in row.columns() {
-                            row_table.set(column.name(), 0)?;
-                        }
-
-                        table.push(row_table)?;
-                    }
-
+                    let table: Table = lua.globals().get("mll_internal").unwrap();
+                    let connection_data: MySqlConnectionConfig =
+                        table.get(connection_string).unwrap();
+                    do_blocking(execute_sql_for_mysql(connection_data, query));
                     return Ok(90);
                 })
                 .unwrap()
@@ -172,13 +132,38 @@ mod my_sql {
         }
     }
 
-    fn execute_sql_for_mysql() {
-        let conn = MySqlConnectOptions::new()
-            .host("localhost")
-            .port(3306)
-            .database("test")
-            .username("root")
-            .password("root");
+    async fn execute_sql_for_mysql(connection: MySqlConnectionConfig, query: String) {
+        let conn = do_blocking(
+            MySqlConnectOptions::new()
+                .host(connection.host.as_str())
+                .port(connection.port)
+                .username(connection.username.as_str())
+                .password(connection.password.as_str())
+                .database(connection.database.as_str())
+                .connect(),
+        );
+
+        if conn.is_err() {
+            eprintln!("Failed to connect to database");
+            return;
+        }
+
+        let result = sqlx::query(query.as_str())
+            .fetch_all(&mut conn.unwrap())
+            .await;
+
+        if result.is_err() {
+            eprintln!("Failed to execute query");
+            return;
+        }
+
+        let fetched = result.unwrap();
+
+        for row in fetched {
+            for column in row.columns() {
+                println!("{}, {}", column.name(), column.type_info());
+            }
+        }
     }
 }
 

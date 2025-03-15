@@ -38,11 +38,12 @@ sqlx = { version = "0.8", features = [
   "json",
   "macros",
   "mysql",
+  "runtime-tokio",
 ], optional = true }
 encoding_rs = { version = "0.8", features = ["fast-kanji-encode", "serde"] }
-tokio = { version = "1.44", features = ["bytes", "rt", "rt-multi-thread"] }
+tokio = { version = "1.44", features = ["bytes", "macros", "rt", "rt-multi-thread", "test-util"] }
 rand = { version = "0.9", features = ["serde"] }
-jaq-core = { version="2.1", optional=true }
+jaq-core = { version = "2.1", optional = true }
 
 
 [dependencies.uuid]

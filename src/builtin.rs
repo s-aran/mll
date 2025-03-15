@@ -48,6 +48,13 @@ impl Builtins {
             let _ = DateTimeOffset {}.set_function(lua);
         }
 
+        #[cfg(feature = "sql")]
+        {
+            use crate::builtins::sql::my_sql::*;
+            let _ = ConnectMySql {}.set_function(lua);
+            let _ = MySql {}.set_function(lua);
+        }
+
         Ok(())
     }
 }
