@@ -16,8 +16,6 @@ impl Builtins {
         let _ = Exec {}.set_function(lua);
         let _ = ShiftJis {}.set_function(lua);
 
-        let _ = ShiftJis {}.set_function(lua);
-
         let _ = RandomInt {}.set_function(lua);
         let _ = RandomString {}.set_function(lua);
 
