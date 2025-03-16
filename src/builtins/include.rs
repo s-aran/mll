@@ -1,3 +1,10 @@
+//! Include external file command
+//!
+//! # Example
+//! ```lua
+//! content = include("other_file.txt")
+//! ```
+
 use core::panic;
 use std::{fs, path::PathBuf};
 

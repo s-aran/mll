@@ -1,3 +1,12 @@
+//! Lua utility commands
+//!
+//! # Examples
+//!
+//! ```lua
+//! local table = json_to_table('{"key": "value"}')
+//! local json = table_to_json(table)
+//! ```
+
 use mlua::Lua;
 use mlua::Table;
 

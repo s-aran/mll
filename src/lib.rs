@@ -1,6 +1,6 @@
-mod builtin;
-mod builtins;
-mod utils;
+pub(crate) mod builtin;
+pub(crate) mod builtins;
+pub(crate) mod utils;
 
 use mlua::{FromLua, Lua, Table};
 use regex::Regex;
@@ -9,6 +9,28 @@ use std::fs::read_to_string;
 use std::path::Path;
 use uuid::Uuid;
 
+/// Trait for getting value by name
+///
+/// # Arguments
+///
+/// `T` - Type of value
+///
+/// # Methods
+///
+/// `get_by_name(&self, name: &str) -> Option<T>` - Get value by name
+///
+/// # Examples
+///
+/// ```
+/// use std::collections::HashMap;
+/// use libmll::GetValueByName;
+///     
+/// let mut table = HashMap::new();
+/// table.insert("name", "hogehoge".to_string());
+///
+/// let value = table.get_by_name("name");
+/// assert_eq!(Some("hogehoge".to_string()), value);
+/// ```
 pub trait GetValueByName<T> {
     fn get_by_name(&self, name: &str) -> Option<T>;
 }
@@ -83,21 +105,97 @@ impl Mll {
         self.pre_process_script = script;
     }
 
+    /// Get template string
+    ///
+    /// # Returns
+    ///
+    /// `&String` - Template string
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libmll::Mll;
+    ///
+    /// let mll = Mll::new();
+    /// let template = mll.template();
+    /// ```
     pub fn template(&self) -> &String {
         &self.template
     }
 
+    /// Set template string
+    ///
+    /// # Arguments
+    ///
+    /// `template: String` - Template string
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libmll::Mll;
+    ///
+    /// let mut mll = Mll::new();
+    /// mll.set_template("Hello, {{name}}!".to_string());
+    ///
+    /// assert_eq!("Hello, {{name}}!", mll.template());
+    /// ```
     pub fn set_template(&mut self, template: String) {
         self.template = template;
     }
 
-    pub fn read_template_file(&mut self, path: &Path) -> &Self {
-        let template = read_to_string(path).unwrap();
-        self.set_template(template);
-
-        self
+    /// Load template from file
+    ///
+    /// # Arguments
+    ///
+    /// `path: &str` - Path to template file
+    ///
+    /// # Returns
+    ///
+    /// `Result<(), String>` - Result of loading template
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use libmll::Mll;
+    ///
+    /// let mut mll = Mll::new();
+    /// let result = mll.load_template("template.json");
+    ///
+    /// assert!(result.is_ok());
+    /// ```
+    pub fn load_template(&mut self, path: &str) -> Result<(), String> {
+        let path = Path::new(path);
+        let template = read_to_string(path);
+        match template {
+            Ok(template) => {
+                self.set_template(template);
+                Ok(())
+            }
+            Err(e) => Err(e.to_string()),
+        }
     }
 
+    /// Render template with Lua script
+    ///
+    /// # Arguments
+    ///
+    /// `script: &str` - Lua script
+    ///
+    /// # Returns
+    ///
+    /// `Result<String, String>` - Rendered template
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libmll::Mll;
+    ///
+    /// let mut mll = Mll::new();
+    /// mll.set_template("Hello, {{name}}!".to_string());
+    /// let rendered = mll.render_with_lua("name = 'hoge'");
+    ///
+    /// assert_eq!("Hello, hoge!", rendered.unwrap());
+    /// ```
     pub fn render_with_lua(&mut self, script: &str) -> Result<String, String> {
         let internal = Internal::new();
 
@@ -112,6 +210,24 @@ impl Mll {
         }
     }
 
+    /// Render template with Lua globals
+    ///   
+    /// # Returns
+    ///
+    /// `Result<String, String>` - Rendered template
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libmll::Mll;
+    ///
+    /// let mut mll = Mll::new();
+    /// mll.set_template("Hello, {{name}}!".to_string());
+    /// mll.set_pre_process_script("name = 'hoge'".to_string());
+    /// let rendered = mll.render_lua_globals();
+    ///
+    /// assert_eq!("Hello, hoge!", rendered.unwrap());
+    /// ```
     pub fn render_lua_globals(&mut self) -> Result<String, String> {
         let internal = Internal::new();
         let _ = internal.load_script(&self.pre_process_script);
@@ -127,6 +243,33 @@ impl Mll {
         self.render(&table)
     }
 
+    /// Render template with map like object
+    ///
+    /// # Arguments
+    ///
+    /// `table: &T` - Map like object
+    ///
+    /// # Returns
+    ///
+    /// `Result<String, String>` - Rendered template
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashMap;
+    /// use libmll::{Mll, GetValueByName};
+    ///
+    /// let template = "Hello, {{name}}!";
+    ///
+    /// let mut table = HashMap::new();
+    /// table.insert("name", "hoge".to_string());
+    ///
+    /// let mut mll = Mll::new();
+    /// mll.set_template(template.to_string());
+    /// let rendered = mll.render(&table);
+    ///
+    /// assert_eq!("Hello, hoge!", rendered.unwrap());
+    /// ```
     pub fn render<T>(&mut self, table: &T) -> Result<String, String>
     where
         T: GetValueByName<String>,
@@ -226,10 +369,53 @@ impl Mll {
         }
     }
 
+    /// Get rendered tags
+    ///
+    /// # Returns
+    ///
+    /// `Vec<String>` - Rendered tags
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libmll::Mll;
+    ///
+    /// let mut mll = Mll::new();
+    /// mll.set_template("Hello, {{name}}!".to_string());
+    /// let _ = mll.render_lua_globals();
+    ///
+    /// let tags = mll.get_rendered_tags();
+    /// assert!(tags.contains(&"name".to_string()));
+    /// assert_eq!(1, tags.len());
+    /// ```
     pub fn get_rendered_tags(&self) -> Vec<String> {
         self.tags.values().cloned().collect()
     }
 
+    /// Get missing variables
+    ///     
+    /// # Returns
+    ///
+    /// `Vec<String>` - Missing variables
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libmll::Mll;
+    /// use std::collections::HashMap;
+    ///
+    /// let mut mll = Mll::new();
+    /// mll.set_template("{{hello}}, {{name}}!".to_string());
+    ///
+    /// let mut table = HashMap::new();
+    /// table.insert("name", "hoge".to_string());
+    ///
+    /// let _ = mll.render(&table);
+    ///
+    /// let missing_variables = mll.get_missing_variables();
+    /// assert_eq!(1, missing_variables.len());
+    /// assert_eq!("hello", missing_variables[0]);
+    /// ```
     pub fn get_missing_variables(&self) -> Vec<String> {
         let mut missing_variables = Vec::new();
 

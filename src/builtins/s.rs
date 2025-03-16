@@ -1,3 +1,10 @@
+//! Shift-JIS string conversion command
+//!
+//! # Example
+//! ```lua
+//! print(s("あいうえお"))  -- あいうえお
+//! ```
+
 use mlua::{Function, Lua};
 
 use super::builtin::BuiltinFunction;

@@ -1,3 +1,11 @@
+//! Render a template with parameters command
+//!
+//! # Example
+//! ```lua
+//! content = render("{{name}}", {name="John Doe"})
+//! print(content)  -- John Doe
+//! ```
+
 use core::panic;
 use std::{fs, path::PathBuf};
 
