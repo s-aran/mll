@@ -1,10 +1,7 @@
 # MLL Template Engine
 
-## Introduction
+See also
 
-mll is a Lua based template engine that allows you to generate text files from templates.
-
-## Features
-
-- Parameters are programmable by Lua
--
+```sh
+cargo doc --no-deps --document-private-items --all-features
+```

@@ -1,3 +1,15 @@
+//! Generate random numbers and strings commands
+//!
+//! # Examples
+//!
+//! ```lua
+//! local random_int = random_int(1, 100)
+//! print(random_int)   -- e.g. 42
+//!
+//! local random_string = random_string(10)
+//! print(random_string)   -- e.g. "aBcDeFgHiJ"
+//! ```
+
 use mlua::Lua;
 use rand::prelude::*;
 

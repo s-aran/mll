@@ -4,6 +4,16 @@ use serde_json::{Map, Value as JsonValue};
 use encoding_rs;
 use encoding_rs::SHIFT_JIS;
 
+/// Convert a JSON string to a Lua table
+///
+/// # Arguments
+///
+/// * `lua` - A reference to the Lua instance
+/// * `json_str` - A JSON string
+///
+/// # Returns
+///
+/// `Result<Table>` - The Lua table
 pub fn json_str_to_lua_table(lua: &Lua, json_str: &str) -> Result<Table> {
     let json_value: JsonValue = serde_json::from_str(json_str)
         .map_err(|e| mlua::Error::RuntimeError(format!("JSON parse error: {}", e)))?;
@@ -17,6 +27,16 @@ pub fn json_str_to_lua_table(lua: &Lua, json_str: &str) -> Result<Table> {
     }
 }
 
+/// Lua table to JSON string
+///
+/// # Arguments
+///
+/// * `lua` - A reference to the Lua instance
+/// * `table` - A Lua table
+///
+/// # Returns
+///
+/// `Result<String>` - The JSON string
 pub fn lua_table_to_json_str(_: &Lua, table: Table) -> Result<String> {
     let json_value = lua_to_json(Value::Table(table))?;
     serde_json::to_string(&json_value).map_err(|e| mlua::Error::RuntimeError(e.to_string()))
@@ -100,6 +120,16 @@ fn is_array(table: &Table) -> Result<bool> {
     Ok(true)
 }
 
+/// Convert a Lua string to a Shift-JIS string
+///
+/// # Arguments
+///
+/// * `lua` - A reference to the Lua instance
+/// * `string` - A Lua string
+///
+/// # Returns
+///
+/// `String` - The Shift-JIS string
 pub fn lua_string_to_shift_jis(lua: &Lua, string: mlua::String) -> mlua::String {
     let ls = string.to_str().unwrap();
     let (s, _, _) = SHIFT_JIS.encode(&ls);

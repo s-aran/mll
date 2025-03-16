@@ -1,9 +1,26 @@
-/// DateTime command module
-///
-/// this module provides formatting and alithmetric operations for datetime table.
-///
-use chrono::prelude::*;
+//! Date and time manipulation commands
+//!    
+//! # Examples
+//! ```lua
+//! local datetime = {
+//!    year = 2020,
+//!    month = 1,
+//!    day = 2,
+//!    hour = 12,
+//!    min = 34,
+//!    sec = 56
+//! }
+//!
+//! local formatted = datetime_format(datetime, "%Y/%m/%d %H:%M:%S")
+//! print(formatted)    -- 2020/01/02 12:34:56
+//!
+//! local new_datetime = datetime_offset(datetime, 1, 2, 3, 4, 5)
+//! local formatted = datetime_format(new_datetime, "%Y/%m/%d %H:%M:%S")
+//! print(formatted)    -- 2020/01/03 15:38:01
+//! ```
+
 use chrono::Duration;
+use chrono::prelude::*;
 use mlua::Lua;
 use mlua::Table;
 
@@ -11,22 +28,19 @@ use super::builtin::*;
 
 /// Format command
 ///
-/// format datetime.
-///
 /// # Examples
 ///
 /// ```lua
 /// local dt = os.date(*t)
 /// local formatted = datetime_format(dt)
 ///
-/// year = formatted.year -- will be 2025
-/// month = formatted.month -- will be 3
-/// day = formatted.day -- will be 14
-/// hour = formatted.hour -- will be 22
-/// minute = formatted.minute -- will be 27
-/// second = formatted.second -- will be 37
+/// year = formatted.year -- e.g. 2025
+/// month = formatted.month -- e.g. 3
+/// day = formatted.day -- e.g. 14
+/// hour = formatted.hour -- e.g. 22
+/// minute = formatted.minute -- e.g. 27
+/// second = formatted.second -- e.g. 37
 /// ```
-///
 pub struct DateTimeFormat;
 
 impl BuiltinFunction for DateTimeFormat {
@@ -47,6 +61,14 @@ impl BuiltinFunction for DateTimeFormat {
     }
 }
 
+/// Offset command
+///
+/// # Examples
+///
+/// ```lua
+/// local dt = os.date(*t)
+/// local new_datetime = datetime_offset(dt, 1, 2, 3, 4, 5)
+/// ```
 pub struct DateTimeOffset;
 
 impl BuiltinFunction for DateTimeOffset {

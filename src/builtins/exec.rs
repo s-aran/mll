@@ -1,3 +1,13 @@
+//! Execute a external command
+//!
+//! # Examples
+//!
+//! ```lua
+//! local result = exec("rustc", {"--version"})
+//! print(result.code)   -- e.g. 0
+//! print(result.stdout)   -- e.g. "rustc 1.85.0 (4d91de4e4 2025-02-17)" (depends on your environment)
+//! print(result.stderr)   -- e.g. ""
+
 use std::process::Command;
 
 use mlua::{FromLua, Function, IntoLua, Lua};
