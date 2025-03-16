@@ -17,7 +17,7 @@ pub fn json_str_to_lua_table(lua: &Lua, json_str: &str) -> Result<Table> {
     }
 }
 
-pub fn lua_table_to_json_str(lua: &Lua, table: Table) -> Result<String> {
+pub fn lua_table_to_json_str(_: &Lua, table: Table) -> Result<String> {
     let json_value = lua_to_json(Value::Table(table))?;
     serde_json::to_string(&json_value).map_err(|e| mlua::Error::RuntimeError(e.to_string()))
 }

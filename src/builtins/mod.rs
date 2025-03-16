@@ -4,6 +4,7 @@ pub mod builtin;
 pub mod datetime;
 pub mod exec;
 pub mod include;
+pub mod lua_utils;
 pub mod random;
 pub mod render;
 pub mod s;

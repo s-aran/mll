@@ -2,6 +2,7 @@ use crate::builtins::{
     builtin::BuiltinFunction,
     exec::Exec,
     include::Include,
+    lua_utils::{JsonToTable, TableToJson},
     random::{RandomInt, RandomString},
     render::Render,
     s::ShiftJis,
@@ -21,6 +22,9 @@ impl Builtins {
 
         let _ = Include {}.set_function(lua);
         let _ = Render {}.set_function(lua);
+
+        let _ = TableToJson {}.set_function(lua);
+        let _ = JsonToTable {}.set_function(lua);
 
         #[cfg(feature = "http")]
         {
