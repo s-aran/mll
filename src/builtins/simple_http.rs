@@ -1,3 +1,5 @@
+//! HTTP request commands.
+
 use core::panic;
 use std::collections::HashMap;
 
